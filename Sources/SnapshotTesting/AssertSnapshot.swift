@@ -140,7 +140,7 @@ public func assertSnapshots<Value, Format>(
 ///           as: snapshotting,
 ///           named: name,
 ///           record: recording,
-///           snapshotDirectory: snapshotDirectory,
+///           snapshotDirectoryURL: snapshotDirectoryURL,
 ///           timeout: timeout,
 ///           file: file,
 ///           testName: testName
@@ -154,7 +154,7 @@ public func assertSnapshots<Value, Format>(
 ///   - snapshotting: A strategy for serializing, deserializing, and comparing values.
 ///   - name: An optional description of the snapshot.
 ///   - recording: Whether or not to record a new reference.
-///   - snapshotDirectory: Optional directory to save snapshots. By default snapshots will be saved in a directory with the same name as the test file, and that directory will sit inside a directory `__Snapshots__` that sits next to your test file.
+///   - snapshotDirectoryURL: Optional directory to save snapshots. By default snapshots will be saved in a directory with the same name as the test file, and that directory will sit inside a directory `__Snapshots__` that sits next to your test file.
 ///   - timeout: The amount of time a snapshot must be generated in.
 ///   - file: The file in which failure occurred. Defaults to the file name of the test case in which this function was called.
 ///   - testName: The name of the test in which failure occurred. Defaults to the function name of the test case in which this function was called.
@@ -165,7 +165,7 @@ public func verifySnapshot<Value, Format>(
   as snapshotting: Snapshotting<Value, Format>,
   named name: String? = nil,
   record recording: Bool = false,
-  snapshotDirectory: String? = nil,
+  snapshotDirectoryURL: URL? = nil,
   timeout: TimeInterval = 5,
   file: StaticString = #file,
   testName: String = #function,
@@ -179,11 +179,11 @@ public func verifySnapshot<Value, Format>(
       let fileUrl = URL(fileURLWithPath: "\(file)", isDirectory: false)
       let fileName = fileUrl.deletingPathExtension().lastPathComponent
 
-      let snapshotDirectoryUrl = snapshotDirectory.map { URL(fileURLWithPath: $0, isDirectory: true) }
+      let snapshotDirectoryUrl = snapshotDirectoryURL
         ?? fileUrl
-          .deletingLastPathComponent()
-          .appendingPathComponent("__Snapshots__")
-          .appendingPathComponent(fileName)
+        .deletingLastPathComponent()
+        .appendingPathComponent("__Snapshots__")
+        .appendingPathComponent(fileName)
 
       let identifier: String
       if let name = name {
@@ -232,7 +232,7 @@ public func verifySnapshot<Value, Format>(
       guard var diffable = optionalDiffable else {
         return "Couldn't snapshot value"
       }
-      
+
       guard !recording, fileManager.fileExists(atPath: snapshotFileUrl.path) else {
         try snapshotting.diffing.toData(diffable).write(to: snapshotFileUrl)
         return recording
